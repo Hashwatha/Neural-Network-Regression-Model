@@ -46,59 +46,112 @@ Evaluate the model with the testing data.
 ### Name: Hashwatha M
 ### Register Number: 212223240051
 ```
-class NeuralNet(nn.Module):
-    def __init__(self):
+
+import torch
+import torch.nn as nn
+import numpy as np
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+X = torch.linspace(1,70,70).reshape(-1,1)
+
+torch.manual_seed(71)
+e = torch.randint(-8,9,(70,1),dtype=torch.float)
+
+y = 2*X + 1 + e
+print(y.shape)
+
+plt.scatter(X.numpy(), y.numpy(),color='red')
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Generated Data for Linear Regression')
+plt.show()
+torch.manual_seed(59)
+```
+```
+
+class Model(nn.Module):
+    def __init__(self, in_features, out_features):
         super().__init__()
-        self.fc1 = nn.Linear(1,2)
-        self.fc2 = nn.Linear(2,5)
-        self.fc3 = nn.Linear(5,2)
-        self.fc4 = nn.Linear(2,1)
-        self.relu = nn.ReLU()
-        self.history = {'loss': []}
+        self.linear = nn.Linear(in_features, out_features)
 
-  def forward(self, x):
-    x = self.relu(self.fc1(x))
-    x = self.relu(self.fc2(x))
-    x = self.relu(self.fc3(x))
-    x = self.fc4(x)
-
-    return x
+    def forward(self, x):
+        y_pred = self.linear(x)
+        return y_pred
 
 
+torch.manual_seed(59)
+model = Model(1, 1)
+print('Weight:', model.linear.weight.item())
+print('Bias:  ', model.linear.bias.item())
 
-# Initialize the Model, Loss Function, and Optimizer
+loss_function = nn.MSELoss()
 
-ai_world = NeuralNet()
-criterion = nn.MSELoss()
-optimizer = optim.RMSprop(ai_world.parameters(),lr=0.001)
+optimizer = torch.optim.SGD(model.parameters(), lr=0.0001)
+
+epochs = 50
+losses = []
+
+for epoch in range(1, epochs + 1):
+    optimizer.zero_grad()
+    y_pred = model(X)
+    loss = loss_function(y_pred, y)
+    losses.append(loss.item())
+
+    loss.backward()
+    optimizer.step()
 
 
-def train_model(ai_world, X_train, y_train, criterion, optimizer, epochs=2000):
-    for epoch in range(epochs):
-        optimizer.zero_grad()
-        loss = criterion(ai_world(X_train), y_train)
-        loss.backward()
-        optimizer.step()
+    print(f'epoch: {epoch:2}  loss: {loss.item():10.8f}  '
+          f'weight: {model.linear.weight.item():10.8f}  '
+          f'bias: {model.linear.bias.item():10.8f}')
 
-        ai_world.history['loss'].append(loss.item())
+plt.plot(range(epochs), losses)
+plt.ylabel('Loss')
+plt.xlabel('epoch');
+plt.show()
 
-        if epoch % 200 == 0:
-            print(f'Epoch [{epoch}/{epochs}], Loss: {loss.item():.6f}')
+
+x1 = torch.tensor([X.min().item(), X.max().item()])
+
+
+w1, b1 = model.linear.weight.item(), model.linear.bias.item()
+
+
+y1 = x1 * w1 + b1
+
+
+print(f'Final Weight: {w1:.8f}, Final Bias: {b1:.8f}')
+print(f'X range: {x1.numpy()}')
+print(f'Predicted Y values: {y1.numpy()}')
+
+
+plt.scatter(X.numpy(), y.numpy(), label="Original Data")
+plt.plot(x1.numpy(), y1.numpy(), 'r', label="Best-Fit Line")
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Trained Model: Best-Fit Line')
+plt.legend()
+plt.show()
 
 ```
 ## Dataset Information
 
-<img width="223" height="543" alt="image" src="https://github.com/user-attachments/assets/7552d383-5ae4-4f2f-881b-f407e21578f8" />
+<img width="844" height="593" alt="image" src="https://github.com/user-attachments/assets/b710a16d-dd20-4b74-8d2e-2dc8387213d5" />
 
 ## OUTPUT
 
 ### Training Loss Vs Iteration Plot
 
-<img width="754" height="552" alt="image" src="https://github.com/user-attachments/assets/926cf75e-6942-499d-9bd9-4e7ae7c2c78b" />
+<img width="1048" height="543" alt="image" src="https://github.com/user-attachments/assets/1dc75b6e-fd5f-4f1b-926c-0c01c6dcffad" />
+
+### Best Fit line plot
+
+<img width="928" height="582" alt="image" src="https://github.com/user-attachments/assets/e0c9a11d-9250-4584-af1c-3966e2051a7e" />
 
 ### New Sample Data Prediction
 
-<img width="939" height="287" alt="image" src="https://github.com/user-attachments/assets/3e40b7fe-c021-4aca-8aab-2c4ae7b0faa3" />
+<img width="1103" height="108" alt="image" src="https://github.com/user-attachments/assets/4e4369c7-62f4-48a4-9c31-b8dba9cd6efb" />
 
 ## RESULT
 
